@@ -19,6 +19,15 @@
         </tbody>
       </table>
     </section>
+    <section>
+      <h3>ドラッグアンドドロップで1つから複数のファイルのプロパティを取得します。</h3>
+      <div id="drop" sttle="width:700; height150px; padding:10px; vorder:3px solid"
+           ondragover="onDragOver(event)"></div>
+      <p>ファイルプロパティの表示</p>
+      <div id="info"></div>
+      <div id="disp"></div>
+    </section>
+    </section>
     <script type="text/javascript">
       if(typeof sessionStorage === 'undefined'){
         window.alert("この環境ではweb Storageが使えません");
@@ -68,6 +77,65 @@
         }
         //初回の表示
         viewStorage();
+        if(!window.File){
+          window.alert("本ブラウザではFile APIが使えません");
+        }else{
+          //File APIが実装されている場合は、dropイベントを登録
+          document.getElememtById("drop").addEventListener("drop", onDrop, false);
+      }
+        //Drop領域にドロップした際のファイルのプロパティ情報読み取り処理
+        function onDrop(event){
+          var files = event.dataTransfer.files;
+          var info = documentElementById("info");
+          var disp = documentElememtById("disp");
+          disp.innerHTML ="";
+          
+          //ファイルの配列から１つずつファイルを選択
+          for(var i=0; i< files.lingth; i++){
+            var f = files[i];
+            info.innerHTML +="ファイル名 :" + f.name + "ファイルの型:" + f.type + "ファイルのサイズ:" + f.size / 1000 + KB " + "<br />;
+            
+            //FileReaderオブジェクト生成
+            var reader = new FileReader();
+            
+            //画像ファイルからテキストファイルかを判定
+            if(!f.type.match('image.*') && !f.type.match('text.*')){
+              alert("画像ファイルとテキストファイル以外は表示できません。");
+              continue;
+            }
+            
+            //エラー発生時の処理
+            reader.onerror = function(evt){
+              disp.innerHTML = "読み取り時にエラーが発生しました。";
+            }
+          }
+          //画像ファイルの場合処理
+          if(f.type.match('image.*')){
+            //ファイル読み取りが完了した際に呼ばれる処理
+            reader.onload = function(evt){
+              var li = document.createElement('li');
+              var img = document.createElement('img');
+              img.src =evt.target.result;
+              li.appendChild(img);
+              li.innerHTML += "<br />";
+              disp.appendChiled(li);
+            }
+            //readAsDataURLメソッドでファイルの内容を取得
+            reader.readAsDataURL(f);
+          }
+        }
+        //テキストファイルの場合の処理
+        if(f.type.math('text.*')){
+          //ファイル読み取りが完了した際に呼ばれる処理
+          reader.onLoad = function(evt){
+            //FileReaderが取得したテキストをそのままdivタグに出力
+            disp.innerHTML = reader.result;
+          }
+          //readAsTextメソッドでファイルの内容を取得
+          reader.readAsText(f, 'utf-8');
+        }
+      //ブラウザ上でファイルを展開する挙動を抑止
+      event.preventDefault();
       }
     </script>
   </body>
